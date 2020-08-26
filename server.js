@@ -1,12 +1,13 @@
 global.env =
   process.env.NODE_ENV === undefined ? "development" : process.env.NODE_ENV;
-const PORT = process.env.PORT === undefined ? 8080 : process.env.PORT;
+const PORT = process.env.PORT === undefined ? 8081 : process.env.PORT;
 
 const express = require("express");
 const app = express();
 const compression = require("compression");
 const bodyParser = require("body-parser");
 const HttpServer = require("http").createServer(app);
+const io = require("socket.io")(HttpServer);
 
 const logger = require("./utils/logger");
 
@@ -18,14 +19,13 @@ class Server {
 
   async init() {
     try {
-      await this.initDrivers();
-
-      this.initRepositories();
-      this.initUsecases();
+      //this.initRepositories();
+      //this.initUsecases();
       this.initExpress();
-      this.initRoutes();
+      //this.initRoutes();
       this.initServer();
     } catch (err) {
+      console.log(err);
       process.exit(err);
     }
   }
@@ -55,13 +55,18 @@ class Server {
         extended: true,
       })
     );
-    app.use(express.static(__dirname + "/views", { maxAge: "30 days" }));
+    app.use(
+      express.static(__dirname + "/public", {
+        //maxAge: "30 days"
+      })
+    );
   }
 
   initServer() {
     HttpServer.listen(PORT, () => {
       console.log(`Server Running ${PORT}`);
     });
+    require("./services/websocket")(io);
   }
 
   initDrivers() {
@@ -122,11 +127,18 @@ const server = new Server();
 ].forEach((eventType) => {
   process.on(eventType, (err = "") => {
     process.removeAllListeners();
+
+    let error = err.toString();
+
+    if (err.stack) {
+      error = err.stack;
+    }
+
     logger.Log({
       level: logger.LEVEL.ERROR,
       component: "SERVER",
       code: "SERVER.EXIT",
-      description: err.toString(),
+      description: error,
       category: "",
       ref: {},
     });
