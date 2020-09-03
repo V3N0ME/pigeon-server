@@ -14,10 +14,9 @@ class WebSocketHandler {
     console.log("Connected", socket.id);
 
     socket.on("call-user", (data) => {
-      // socket.to(data.to).emit("call-made", {
-      //   offer: data.offer,
-      //   socket: socket.id,
-      // });
+      socket.broadcast.emit("make-ring", {
+        user: "Room - 143",
+      });
 
       socket.broadcast.emit("call-made", {
         offer: data.offer,
@@ -29,6 +28,12 @@ class WebSocketHandler {
       socket.broadcast.emit("answer-made", {
         socket: socket.id,
         answer: data.answer,
+      });
+    });
+
+    socket.on("make-ring", () => {
+      socket.broadcast.emit("make-ring", {
+        user: "Room - 143",
       });
     });
 
