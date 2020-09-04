@@ -1,8 +1,11 @@
 {
-  "name": "boilerplate",
+  "name": "server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "server": "server.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,5 +25,10 @@
     "npm": "^6.13.1",
     "socket.io": "^2.3.0",
     "winston": "^3.2.1"
+  },
+  "pkg": {
+    "assets": [
+      "node_modules/**/*"
+    ]
   }
 }

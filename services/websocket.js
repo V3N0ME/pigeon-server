@@ -13,26 +13,29 @@ class WebSocketHandler {
   onConnect(socket) {
     console.log("Connected", socket.id);
 
+    const roomId = socket.handshake.query["roomId"];
+    socket.join(roomId);
+
     socket.on("call-user", (data) => {
       socket.broadcast.emit("make-ring", {
         user: "Room - 143",
       });
 
-      socket.broadcast.emit("call-made", {
+      socket.to(roomId).emit("call-made", {
         offer: data.offer,
         socket: socket.id,
       });
     });
 
     socket.on("make-answer", (data) => {
-      socket.broadcast.emit("answer-made", {
+      socket.to(roomId).emit("answer-made", {
         socket: socket.id,
         answer: data.answer,
       });
     });
 
     socket.on("make-ring", () => {
-      socket.broadcast.emit("make-ring", {
+      socket.to(roomId).emit("make-ring", {
         user: "Room - 143",
       });
     });
