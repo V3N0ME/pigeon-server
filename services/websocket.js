@@ -1,6 +1,7 @@
 class WebSocketHandler {
   constructor(io, repo) {
     this.io = io;
+    this.activeClients = {};
     this.init();
   }
 
@@ -13,12 +14,15 @@ class WebSocketHandler {
   onConnect(socket) {
     console.log("Connected", socket.id);
 
+    this.activeClients[socket.id] = true;
+    console.log("Active Clients -", Object.keys(this.activeClients).length);
+
     const roomId = socket.handshake.query["roomId"];
     socket.join(roomId);
 
     socket.on("call-user", (data) => {
       socket.broadcast.emit("make-ring", {
-        user: "Room - 143",
+        roomId: data.roomId,
       });
 
       socket.to(roomId).emit("call-made", {
@@ -34,17 +38,11 @@ class WebSocketHandler {
       });
     });
 
-    socket.on("make-ring", () => {
-      socket.to(roomId).emit("make-ring", {
-        user: "Room - 143",
-      });
+    socket.on("disconnect", () => {
+      delete this.activeClients[socket.id];
+
+      console.log("Active Clients -", Object.keys(this.activeClients).length);
     });
-
-    socket.on("disconnect", this.onDisconnect);
-  }
-
-  onDisconnect(socket) {
-    console.log("Disconnected");
   }
 }
 
