@@ -38,6 +38,10 @@ class WebSocketHandler {
       });
     });
 
+    socket.on("call-disconnect", () => {
+      socket.to(roomId).emit("call-disconnect");
+    });
+
     socket.on("disconnect", () => {
       delete this.activeClients[socket.id];
 
