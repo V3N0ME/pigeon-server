@@ -18,13 +18,17 @@ class WebSocketHandler {
     console.log("Active Clients -", Object.keys(this.activeClients).length);
 
     const roomId = socket.handshake.query["roomId"];
+
     socket.join(roomId);
+    socket.to(roomId).emit("user-join");
+
+    if (roomId) {
+      socket.broadcast.emit("make-ring", {
+        roomId: roomId,
+      });
+    }
 
     socket.on("call-user", (data) => {
-      socket.broadcast.emit("make-ring", {
-        roomId: data.roomId,
-      });
-
       socket.to(roomId).emit("call-made", {
         offer: data.offer,
         socket: socket.id,
