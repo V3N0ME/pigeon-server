@@ -20,7 +20,9 @@ class WebSocketHandler {
     const roomId = socket.handshake.query["roomId"];
 
     socket.join(roomId);
-    socket.to(roomId).emit("user-join");
+    socket.to(roomId).emit("user-join", {
+      socketId: socket.id,
+    });
 
     if (roomId) {
       socket.broadcast.emit("make-ring", {
@@ -29,21 +31,23 @@ class WebSocketHandler {
     }
 
     socket.on("call-user", (data) => {
-      socket.to(roomId).emit("call-made", {
+      socket.to(data.socketId).emit("call-made", {
         offer: data.offer,
-        socket: socket.id,
+        socketId: socket.id,
       });
     });
 
     socket.on("make-answer", (data) => {
-      socket.to(roomId).emit("answer-made", {
-        socket: socket.id,
+      socket.to(data.socketId).emit("answer-made", {
+        socketId: socket.id,
         answer: data.answer,
       });
     });
 
     socket.on("call-disconnect", () => {
-      socket.to(roomId).emit("call-disconnect");
+      socket.to(roomId).emit("call-disconnect", {
+        socketId: socket.id,
+      });
     });
 
     socket.on("disconnect", () => {
