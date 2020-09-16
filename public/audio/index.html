@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>In Call</title>
+  <link rel="stylesheet" type="text/css" href="index.css" />
+  <script src="../js/socket.io.js"></script>
+
+  <!--lib-->
+  <script type="text/javascript" src="callManager.js"></script>
+  <script type="text/javascript" src="index.js"></script>
+  <!---->
+</head>
+
+<body style="background-color: black">
+
+  <div class="video-wrapper">
+    <div id="remote-video-container" class="remote-video-container-layout1">
+      <!-- <video autoplay class="remote-video-layout1" id="remote-video"></video> -->
+    </div>
+
+    <div id="local-video-container" class="local-video-container-layout1">
+      <video autoplay muted class="local-video-layout1" id="local-video"></video>
+    </div>
+  </div>
+
+  <div id="tool-bar">
+    <h2 id="status" style="color: white; font-family: Verdana, Geneva, Tahoma, sans-serif;">Connecting...</h2>
+    <div style="display: inline-block">
+      <img src="images/mic.png" state="on" class="icon green" id="mute-button"></img>
+      <img src="images/end-call.png" class="icon red" style="width: 40px;height: 40px;padding: 20px"
+        id="end-call-button"></img>
+      <img src="images/video.png" state="on" class="icon green" id="camera-button"></img>
+    </div>
+  </div>
+
+  <img style="display:none" src="images/layout-1.png" id="toggle-layout" class="icon blue" state="layout1"></img>
+
+</body>
+
+</html>
