@@ -165,7 +165,11 @@ class Main {
   }
 
   initLocalStream(callback) {
-    navigator.getUserMedia = navigator.webkitGetUserMedia;
+    navigator.getUserMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
+      navigator.msGetUserMedia;
     navigator.getUserMedia(
       constrains,
       (stream) => {

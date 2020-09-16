@@ -1,5 +1,10 @@
 const constrains = {
   audio: true,
+  video: {
+    width: "300",
+    height: "200",
+    frameRate: "15",
+  },
   video: false,
 };
 
@@ -160,7 +165,11 @@ class Main {
   }
 
   initLocalStream(callback) {
-    navigator.getUserMedia = navigator.webkitGetUserMedia;
+    navigator.getUserMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
+      navigator.msGetUserMedia;
     navigator.getUserMedia(
       constrains,
       (stream) => {

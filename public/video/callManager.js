@@ -2,6 +2,14 @@ const { RTCPeerConnection, RTCSessionDescription } = window;
 
 //let peerConnection = null;
 
+var cfg = {
+  iceTransportPolicy: "all", // set to "relay" to force TURN.
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "turn:10.252.73.50", username: "webrtc", credential: "firefox" },
+  ],
+};
+
 class CallManager {
   constructor(socket, remoteVideo, roomId) {
     this.socket = socket;
@@ -17,7 +25,7 @@ class CallManager {
       return;
     }
 
-    const peerConnection = new RTCPeerConnection();
+    const peerConnection = new RTCPeerConnection(cfg);
 
     this.streams = {};
 
