@@ -50,6 +50,12 @@ class WebSocketHandler {
       });
     });
 
+    socket.on("speaking", () => {
+      socket.to(roomId).emit("speaking", {
+        socketId: socket.id,
+      });
+    });
+
     socket.on("disconnect", () => {
       delete this.activeClients[socket.id];
 
