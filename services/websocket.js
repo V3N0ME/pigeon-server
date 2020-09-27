@@ -56,6 +56,13 @@ class WebSocketHandler {
       });
     });
 
+    socket.on("zoom", (data) => {
+      socket.to(roomId).emit("zoom", {
+        socketId: socket.id,
+        zoom: data.zoom,
+      });
+    });
+
     socket.on("disconnect", () => {
       delete this.activeClients[socket.id];
 
