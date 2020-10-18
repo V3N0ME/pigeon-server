@@ -53,7 +53,7 @@ class UserRepository {
             reject(err);
             return;
           }
-          resolve({ code: 200, _id: doc["_id"], role: doc["role"] });
+          resolve(doc);
         }
       );
     });
@@ -63,7 +63,7 @@ class UserRepository {
     return new Promise((resolve, reject) => {
       this.db
         .find({ role: "user" })
-        .projection({ name: 1, username: 1 })
+        //.projection({ name: 1, username: 1 })
         .exec((err, docs) => {
           if (err) {
             logger.Log({

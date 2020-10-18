@@ -1,14 +1,28 @@
+const jwt = require("./jwt");
+
 class WebSocketHandler {
-  constructor(io, repo) {
+  constructor(io) {
     this.io = io;
     this.activeClients = {};
     this.init();
   }
 
   init() {
-    this.io.on("connect", (socket) => {
-      this.onConnect(socket);
-    });
+    this.io
+      .use(async (socket, next) => {
+        const query = socket.handshake.query;
+        if (query && query.token) {
+          try {
+            await jwt.decode(query.token);
+            next();
+          } catch (err) {
+            next(new Error("Authentication error"));
+          }
+        }
+      })
+      .on("connect", (socket) => {
+        this.onConnect(socket);
+      });
   }
 
   onConnect(socket) {

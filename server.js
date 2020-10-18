@@ -7,7 +7,9 @@ const app = express();
 const compression = require("compression");
 const bodyParser = require("body-parser");
 const HttpServer = require("http").createServer(app);
-const io = require("socket.io")(HttpServer);
+const io = require("socket.io")(HttpServer, {
+  pingTimeout: 30000,
+});
 
 const logger = require("./utils/logger");
 
@@ -118,32 +120,26 @@ class Server {
 
 const server = new Server();
 
-[
-  "SIGINT",
-  "SIGTERM",
-  "SIGQUIT",
-  "exit",
-  "uncaughtException",
-  "SIGUSR1",
-  "SIGUSR2",
-].forEach((eventType) => {
-  process.on(eventType, (err = "") => {
-    process.removeAllListeners();
+["SIGINT", "SIGTERM", "SIGQUIT", "exit", "SIGUSR1", "SIGUSR2"].forEach(
+  (eventType) => {
+    process.on(eventType, (err = "") => {
+      process.removeAllListeners();
 
-    let error = err.toString();
+      let error = err.toString();
 
-    if (err.stack) {
-      error = err.stack;
-    }
+      if (err.stack) {
+        error = err.stack;
+      }
 
-    logger.Log({
-      level: logger.LEVEL.ERROR,
-      component: "SERVER",
-      code: "SERVER.EXIT",
-      description: error,
-      category: "",
-      ref: {},
+      logger.Log({
+        level: logger.LEVEL.ERROR,
+        component: "SERVER",
+        code: "SERVER.EXIT",
+        description: error,
+        category: "",
+        ref: {},
+      });
+      server.onClose();
     });
-    server.onClose();
-  });
-});
+  }
+);

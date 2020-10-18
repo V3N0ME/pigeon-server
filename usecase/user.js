@@ -14,10 +14,11 @@ class UserUsecase {
     });
   }
 
-  register(player) {
+  register(user) {
     return new Promise(async (resolve, reject) => {
       try {
-        const resp = await this.userRepo.create(player);
+        user.password = "default-password";
+        const resp = await this.userRepo.create(user);
         if (resp.code === 200) {
           const token = await jwt.sign(
             {
@@ -40,12 +41,12 @@ class UserUsecase {
   login(credentials) {
     return new Promise(async (resolve, reject) => {
       try {
-        const resp = await this.userRepo.login(credentials);
-        if (resp.code === 200) {
+        const doc = await this.userRepo.login(credentials);
+        if (doc) {
           const token = await jwt.sign(
             {
-              id: resp._id,
-              role: resp.role,
+              id: doc._id,
+              role: doc.role,
             },
             "3d"
           );
