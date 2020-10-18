@@ -44,7 +44,13 @@ class UserUsecase {
             },
             "3d"
           );
-          resolve({ code: 200, token: token });
+          resolve({
+            code: 200,
+            token: token,
+            name: doc.name,
+            role: doc.role,
+            specialization: doc.specialization,
+          });
           return;
         }
 

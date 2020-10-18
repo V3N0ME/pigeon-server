@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  background-color: whitesmoke;
+  padding-top: 75px;
+}
+
+#container {
+  text-align: center;
+  padding: 20px;
+  width: 95%;
+  margin: auto;
+  background-color: white;
+  max-width: 500px;
+}
+
+#logo {
+  height: 200px;
+  margin: 15px;
+}

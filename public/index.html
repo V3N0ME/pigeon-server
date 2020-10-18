@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Feedback | Home</title>
+    <link rel="stylesheet" href="./index.css" />
+    <link rel="icon" href="/public/static/favicon.ico" />
+    <script>
+      if (sessionStorage.getItem("token") === null) {
+        window.location = "/login";
+      } else {
+        window.location = "/users";
+      }
+    </script>
+  </head>
+</html>

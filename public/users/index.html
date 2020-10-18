@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Feedback | Questions</title>
+    <link rel="icon" href="/static/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+      integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+      <!-- Brand/logo -->
+      <a class="navbar-brand" href="#">
+        <img src="/static/favicon.ico" alt="logo" style="width:40px;" />
+      </a>
+      <ul class="navbar-nav">
+        <!-- <li class="nav-item">
+          <a class="nav-link" href="/report">Report</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/questions">Questions</a>
+        </li> -->
+      </ul>
+    </nav>
+    <br />
+
+    <!-- The Modal -->
+    <div class="modal fade" id="myModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">User</h4>
+            <button type="button" class="close" data-dismiss="modal">×</button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            <label>Name</label>
+            <input type="text" class="form-control" id="input-name" />
+            <br />
+            <label>Username</label>
+            <input type="text" class="form-control" id="input-username" />
+            <br />
+            <label>Specialization</label>
+            <input type="text" class="form-control" id="input-specialization" />
+            <br />
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="save()">
+              Save
+            </button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>
+        Users &nbsp;&nbsp;&nbsp;
+        <button onclick="openCreateModel()" class="btn btn-primary">
+          Create User
+        </button>
+      </h2>
+      <br />
+
+      <table class="table" id="table">
+        <thead class="thead-dark">
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Created At</th>
+            <th>Specialization</th>
+            <!-- <th>Edit</th>
+            <th>Delete</th> -->
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <script>
+      var inputName = document.getElementById("input-name");
+      var inputUsername = document.getElementById("input-username");
+      var inputSpecialization = document.getElementById("input-specialization");
+
+      var saveState = "add";
+
+      getUsers();
+
+      function getUsers() {
+        var token = sessionStorage.getItem("token");
+
+        $.ajax({
+          url: "/user",
+          type: "get",
+          headers: {
+            'x-access-token': token
+          },
+          success: function(res) {
+            if (res.code === 403) {
+              window.location = "/login";
+              return;
+            }
+          
+            populateTable(res);
+           
+          },
+          error: function(err) {
+            alert(err.toString());
+          }
+        });
+      }
+
+      function getInputTypes() {
+        var token = sessionStorage.getItem("token");
+
+        $.ajax({
+          url: "/question/input_type",
+          type: "get",
+          headers: {
+            authorization: token
+          },
+          success: function(res) {
+            if (res.code === 403) {
+              alert(res.msg);
+              window.location = "/login";
+              return;
+            }
+            if (res.code === 200) {
+              var types = res.data;
+              for (var i = 0; i < types.length; i++) {
+                var opt = document.createElement("option");
+                opt.text = types[i].label;
+                opt.value = types[i].id;
+                inputType.add(opt);
+              }
+            } else {
+              alert(res.msg);
+            }
+          },
+          error: function(err) {
+            alert(err.toString());
+          }
+        });
+      }
+
+      function getOptionGroups() {
+        var token = sessionStorage.getItem("token");
+
+        $.ajax({
+          url: "/question/option_group",
+          type: "get",
+          headers: {
+            authorization: token
+          },
+          success: function(res) {
+            if (res.code === 403) {
+              alert(res.msg);
+              window.location = "/login";
+              return;
+            }
+            if (res.code === 200) {
+              var groups = res.data;
+              for (var i = 0; i < groups.length; i++) {
+                var opt = document.createElement("option");
+                opt.text = groups[i].options.join(", ");
+                opt.value = groups[i].id;
+                optionGroup.add(opt);
+              }
+            } else {
+              alert(res.msg);
+            }
+          },
+          error: function(err) {
+            alert(err.toString());
+          }
+        });
+      }
+    </script>
+    <script>
+      var table = document.getElementById("table");
+
+      function clearTable() {
+        while (table.rows.length !== 1) {
+          table.deleteRow(1);
+        }
+      }
+
+      function populateTable(reports) {
+        clearTable();
+        for (var i in reports) {
+          insertRow(reports[i]);
+        }
+      }
+
+      function insertRow(report) {
+        var row = table.insertRow();
+
+        var i = 0;
+
+        var userId = report["_id"];
+       
+        delete report["_id"];
+
+        report["createdAt"] = new Date(report["createdAt"]).toDateString();
+
+        for (var field in report) {
+          var cell = row.insertCell(i++);
+          if (field === "response" && inputType === "image") {
+            var link = document.createElement("a");
+            link.href = report[field];
+            link.textContent = "image";
+            link.target = "_blank";
+            cell.appendChild(link);
+            return;
+          }
+
+          var label = document.createElement("label");
+          label.textContent = report[field];
+          cell.appendChild(label);
+        }
+
+        cell = row.insertCell(i++);
+
+        // var editIcon = document.createElement("span");
+        // editIcon.className = "fas fa-edit";
+        // editIcon.onclick = function() {
+        //   saveState = "update";
+        //   selectedId = questionId;
+        //   questionLabel.value = report["question"];
+        //   inputType.value = inputTypeId;
+        //   optionGroup.value = optionGroupId == null ? "" : optionGroupId;
+        //   defaultValue.value = default_value;
+        //   priority.value = report["priority"];
+        //   isRequired.value = report["is_required"];
+        //   $("#myModal").modal();
+        // };
+        // cell.appendChild(editIcon);
+
+        // cell = row.insertCell(i++);
+
+        // var deleteIcon = document.createElement("span");
+        // deleteIcon.className = "fas fa-trash";
+        // deleteIcon.onclick = function() {
+        //   if (confirm("Are you sure ?")) {
+        //     deleteQuestion(questionId, row);
+        //   }
+        // };
+      }
+    </script>
+    <script>
+      function deleteQuestion(id) {
+        var token = sessionStorage.getItem("token");
+
+        $.ajax({
+          url: "/user?id=" + id,
+          type: "delete",
+          headers: {
+            authorization: token
+          },
+          success: function(res) {
+            if (res.code === 403) {
+              alert(res.msg);
+              window.location = "/login";
+              return;
+            }
+            if (res.code === 200) {
+              getQuestions();
+            } else {
+              alert(res.msg);
+            }
+          },
+          error: function(err) {
+            alert(err.toString());
+          }
+        });
+      }
+
+      function updateQuestion(id, obj) {
+        var token = sessionStorage.getItem("token");
+
+        $.ajax({
+          url: "/question?id=" + id,
+          type: "put",
+          data: JSON.stringify(obj),
+          headers: {
+            authorization: token,
+            "Content-Type": "application/json"
+          },
+          success: function(res) {
+            if (res.code === 403) {
+              alert(res.msg);
+              window.location = "/login";
+              return;
+            }
+            if (res.code === 200) {
+              getQuestions();
+              $("#myModal").modal("hide");
+            } else {
+              alert(res.msg);
+            }
+          },
+          error: function(err) {
+            alert(err.toString());
+          }
+        });
+      }
+
+      function createQuestion(obj) {
+        var token = sessionStorage.getItem("token");
+
+        $.ajax({
+          url: "/user/register",
+          type: "post",
+          data: JSON.stringify(obj),
+          headers: {
+            'x-access-token': token,
+            "Content-Type": "application/json"
+          },
+          success: function(res) {
+            if (res.code === 403) {
+              alert(res.msg);
+              window.location = "/login";
+              return;
+            }
+
+            if (res.code != 200) {
+              alert(res.msg);
+              return;
+            }
+
+            getUsers();
+            $("#myModal").modal("hide");
+           
+          },
+          error: function(err) {
+            alert(err.toString());
+          }
+        });
+      }
+    </script>
+    <script>
+      function resetValues() {
+        inputName.value = "";
+        inputUsername.value = "";
+        inputSpecialization.value = "";
+      }
+
+      $("#myModal").on("hidden.bs.modal", function() {
+        resetValues();
+      });
+
+      function validate() {
+        const obj = {};
+        obj.name = inputName.value;
+        obj.username = inputUsername.value;
+        obj.specialization = inputSpecialization.value;
+
+        if (obj.name.trim().length === 0) {
+          alert("Enter name");
+          return false;
+        }
+
+        if (obj.username === "") {
+          alert("Enter username");
+          return false;
+        }
+
+        if (obj.specialization === "") {
+          alert("Enter Specification");
+          return false;
+        }
+
+        return true;
+      }
+
+      function serialize() {
+        const obj = {};
+        obj.name = inputName.value;
+        obj.username = inputUsername.value;
+        obj.specialization = inputSpecialization.value;
+        obj.role = "user"
+
+        return obj;
+      }
+
+      function save() {
+        var isValid = validate();
+        if (!isValid) {
+          return;
+        }
+        var obj = serialize();
+
+        if (saveState === "add") {
+          createQuestion(obj);
+        } else if (saveState === "update") {
+          updateQuestion(selectedId, obj);
+        }
+      }
+
+      function openCreateModel() {
+        saveState = "add";
+        $("#myModal").modal();
+      }
+    </script>
+  </body>
+</html>

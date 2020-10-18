@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Feedback | Login</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/static/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body>
+    <div id="container">
+      <img src="/static/logo.png" id="logo" />
+      <div class="form-group">
+        <label for="usr">Name:</label>
+        <input type="text" class="form-control" id="usr" name="username" />
+      </div>
+      <div class="form-group">
+        <label for="pwd">Password:</label>
+        <input type="password" class="form-control" id="pwd" name="password" />
+      </div>
+      <button type="submit" onclick="login()" class="btn btn-primary">
+        Login
+      </button>
+    </div>
+    <script>
+      var username = document.getElementById("usr");
+      var password = document.getElementById("pwd");
+      function login() {
+        if (
+          username.value.trim().length === 0 ||
+          password.value.trim().length === 0
+        ) {
+          return;
+        }
+
+        $.ajax({
+          url: "/user/login",
+          type: "post",
+          data: {
+            username: username.value,
+            password: password.value
+          },
+          success: function(response) {
+            if (response.code === 200) {
+
+              if(response.role != "admin") {
+                alert("Invalid Credentials !")
+                return
+              }
+
+              sessionStorage.setItem("token", response.token);
+              window.location = "/users";
+            } else {
+              alert(response.msg);
+            }
+          },
+          error: function(response) {
+            alert(response);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

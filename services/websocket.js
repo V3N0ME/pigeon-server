@@ -1,5 +1,4 @@
 const { v4: uuidv4 } = require("uuid");
-const { decode } = require("./jwt");
 const jwt = require("./jwt");
 
 class WebSocketHandler {
