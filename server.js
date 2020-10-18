@@ -19,10 +19,10 @@ class Server {
 
   async init() {
     try {
-      //this.initRepositories();
-      //this.initUsecases();
+      this.initRepositories();
+      this.initUsecases();
       this.initExpress();
-      //this.initRoutes();
+      this.initRoutes();
       this.initServer();
     } catch (err) {
       console.log(err);
@@ -86,22 +86,24 @@ class Server {
   }
 
   initRepositories() {
-    this.exampleRepo = require("./repository/example")(this.mysql.connection);
+    this.playerRepo = require("./repository/player")();
+    this.userRepo = require("./repository/user")();
   }
 
   initUsecases() {
-    this.exampleUsecase = require("./usecase/example")(this.exampleRepo);
+    this.playerUsecase = require("./usecase/player")(this.playerRepo);
+    this.userUsecase = require("./usecase/user")(this.userRepo);
   }
 
   initRoutes() {
     const authMiddleWare = require("./middlewares/auth");
     app.use(authMiddleWare);
 
-    const exampleRouter = require("./routes/example")(this.exampleUsecase);
-    //const exampleRouter = require('./routes/example')( this.example_controller );
+    const playerRouter = require("./routes/player")(this.playerUsecase);
+    const userRouter = require("./routes/user")(this.userUsecase);
 
-    app.use("/example", exampleRouter.getRouter());
-    //app.use('/example', displayRouter.getRouter());
+    app.use("/player", playerRouter.getRouter());
+    app.use("/user", userRouter.getRouter());
   }
 
   onClose() {
