@@ -20,6 +20,7 @@ class UserRoutes {
           name: Joi.string().trim().required(),
           username: Joi.string().trim().required(),
           role: Joi.string().valid("user", "admin").required(),
+          specialization: Joi.string().trim().required(),
         };
 
         const user = req.body;

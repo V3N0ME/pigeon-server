@@ -20,14 +20,7 @@ class UserUsecase {
         user.password = "default-password";
         const resp = await this.userRepo.create(user);
         if (resp.code === 200) {
-          const token = await jwt.sign(
-            {
-              id: resp._id,
-              role: resp.role,
-            },
-            "3d"
-          );
-          resolve({ code: 200, token: token });
+          resolve({ code: 200 });
           return;
         }
 

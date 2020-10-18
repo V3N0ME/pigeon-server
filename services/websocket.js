@@ -1,3 +1,4 @@
+const { decode } = require("./jwt");
 const jwt = require("./jwt");
 
 class WebSocketHandler {
