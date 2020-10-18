@@ -13,13 +13,11 @@ class PlayerUsecase {
           player.uuid
         );
         if (details) {
-          const token = await jwt.sign(
-            {
-              id: details._id,
-              role: "player",
-            },
-            "3d"
-          );
+          const token = await jwt.signWithoutExpiry({
+            id: details._id,
+            name: player.name,
+            role: "player",
+          });
           resolve({ code: 200, token: token });
           return;
         }

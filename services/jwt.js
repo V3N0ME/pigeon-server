@@ -31,6 +31,18 @@ module.exports = class JWT {
     });
   }
 
+  static signWithoutExpiry(payload) {
+    return new Promise((resolve, reject) => {
+      jwt.sign(payload, privateKey, { algorithm: algorithm }, (err, token) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(token);
+        }
+      });
+    });
+  }
+
   static verify(token) {
     return new Promise((resolve, reject) => {
       jwt.verify(

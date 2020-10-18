@@ -1,10 +1,13 @@
+const { v4: uuidv4 } = require("uuid");
 const { decode } = require("./jwt");
 const jwt = require("./jwt");
 
 class WebSocketHandler {
-  constructor(io) {
+  constructor(io, sessionRepo) {
     this.io = io;
+    this.sessionRepo = sessionRepo;
     this.activeClients = {};
+    this.activeSessions = {};
     this.init();
   }
 
@@ -14,7 +17,15 @@ class WebSocketHandler {
         const query = socket.handshake.query;
         if (query && query.token) {
           try {
-            await jwt.decode(query.token);
+            const decoded = await jwt.verify(query.token);
+            socket.userId = decoded.id;
+            socket.userName = decoded.name;
+
+            if (this.activeClients[socket.userId]) {
+              next(new Error("Client already connected"));
+              return;
+            }
+
             next();
           } catch (err) {
             next(new Error("Authentication error"));
@@ -27,21 +38,32 @@ class WebSocketHandler {
   }
 
   onConnect(socket) {
-    console.log("Connected", socket.id);
-
-    this.activeClients[socket.id] = true;
+    this.activeClients[socket.userId] = socket.id;
     console.log("Active Clients -", Object.keys(this.activeClients).length);
 
-    const roomId = socket.handshake.query["roomId"];
+    const remoteClientId = socket.handshake.query["remoteClientId"];
 
-    socket.join(roomId);
-    socket.to(roomId).emit("user-join", {
-      socketId: socket.id,
-    });
+    let roomId = null;
 
-    if (roomId) {
-      socket.broadcast.emit("make-ring", {
-        roomId: roomId,
+    //remoteClientId is only sent in video call screen
+    if (remoteClientId) {
+      if (!this.activeSessions[remoteClientId]) {
+        roomId = uuidv4();
+      } else {
+        roomId = this.activeSessions[remoteClientId];
+      }
+
+      this.activeSessions[socket.userId] = roomId;
+
+      socket.join(roomId);
+      socket.to(roomId).emit("user-join", {
+        socketId: socket.id,
+      });
+
+      const socketId = this.activeClients[remoteClientId];
+      socket.to(socketId).emit("make-ring", {
+        name: socket.userName,
+        roomId: socket.userId,
       });
     }
 
@@ -79,13 +101,14 @@ class WebSocketHandler {
     });
 
     socket.on("disconnect", () => {
-      delete this.activeClients[socket.id];
+      delete this.activeSessions[socket.userId];
+      delete this.activeClients[socket.userId];
 
       console.log("Active Clients -", Object.keys(this.activeClients).length);
     });
   }
 }
 
-module.exports = (io, repo) => {
-  return new WebSocketHandler(io, repo);
+module.exports = (io, sessionRepo) => {
+  return new WebSocketHandler(io, sessionRepo);
 };

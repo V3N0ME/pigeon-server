@@ -39,6 +39,7 @@ class UserUsecase {
           const token = await jwt.sign(
             {
               id: doc._id,
+              name: doc.name,
               role: doc.role,
             },
             "3d"
