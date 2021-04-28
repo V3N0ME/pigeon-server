@@ -1,151 +1,163 @@
-const { v4: uuidv4 } = require("uuid");
-const jwt = require("./jwt");
+const { v4: uuidv4 } = require("uuid")
+const jwt = require("./jwt")
 
 class WebSocketHandler {
-  constructor(io, sessionRepo) {
-    this.io = io;
-    this.sessionRepo = sessionRepo;
+  constructor (io, sessionRepo) {
+    this.io = io
+    this.sessionRepo = sessionRepo
 
-    this.activeClients = {};
-    this.activeSessions = {};
-    this.activeOffers = {};
+    this.activeClients = {}
+    this.activeSessions = {}
+    this.activeOffers = {}
+    this.activeIceCandidates = {}
 
-    this.init();
+    this.init()
   }
 
-  init() {
+  init () {
     this.io
       .use(async (socket, next) => {
-        // const query = socket.handshake.query;
-        // if (query && query.token) {
-        //   try {
-        //     const decoded = await jwt.verify(query.token);
-        //     socket.userId = decoded.id;
-        //     socket.userName = decoded.name;
-
-        //     if (this.activeClients[socket.userId]) {
-        //       next(new Error("Client already connected"));
-        //       return;
-        //     }
-
-        //     next();
-        //   } catch (err) {
-        //     next(new Error("Authentication error"));
-        //   }
-        // }
-        socket.userId = Math.random();
-        next();
+        const query = socket.handshake.query
+        socket.roomId = query.room_id
+        socket.userName = query.user_name
+        socket.userId = socket.id
+        next()
       })
-      .on("connect", (socket) => {
-        this.onConnect(socket);
-      });
+      .on("connect", socket => {
+        this.onConnect(socket)
+      })
   }
 
-  onConnect(socket) {
-    this.activeClients[socket.userId] = socket.id;
-    console.log("Active Clients -", Object.keys(this.activeClients).length);
+  onConnect (socket) {
+    this.activeClients[socket.userId] = socket.id
+    console.log("Active Clients -", Object.keys(this.activeClients).length)
 
-      const roomId = "roomId"
+    const roomId = socket.roomId
 
-      socket.join(roomId);
+    socket.join(roomId)
 
-      // socket.to(roomId).emit("user-join", {
-      //   socketId: socket.id,
-      // });
+    const users = []
 
-      let queuedOffer = null;
+    for (const userId in this.activeClients) {
+      users.push(userId)
+    }
 
-      for(const userId in this.activeOffers) {
+    socket.emit("onUsersList", {
+      users: users
+    })
 
-        console.log("sending offer")
+    socket.to(roomId).emit("onUserJoin", {
+      userId: socket.userId,
+      userName: socket.userName
+    })
 
-        //socket.emit("onOffer", this.activeOffers[userId]);
+    // let queuedOffer = null
 
-        queuedOffer = this.activeOffers[userId]
-      }
+    // for (const userId in this.activeOffers) {
+    //   //console.log("sending offer")
 
-      socket.emit("init", {
-        initiator: Object.keys(this.activeOffers) == 0,
-        ...queuedOffer
-      });
+    //   //socket.emit("onOffer", this.activeOffers[userId]);
 
-      socket.on("OnIceCandidate", (data) => {
+    //   queuedOffer = this.activeOffers[userId]
+    // }
 
-        console.log("OnIceCandidate")
+    // socket.emit("init", {
+    //   initiator: Object.keys(this.activeOffers) == 0,
+    //   "icecandidates": this.activeIceCandidates[socket.id],
+    //   ...queuedOffer
+    // });
 
-        socket.to(roomId).emit("OnIceCandidate", data);
-      });
+    socket.on("OnIceCandidate", data => {
+      console.log("OnIceCandidate")
 
-      socket.on("OnRemoveCandidates", (data) => {
+      // if (!this.activeIceCandidates[socket.id]) {
+      //   this.activeIceCandidates[socket.id] = []
+      // }
 
-        console.log("OnRemoveCandidates")
+      // this.activeIceCandidates[socket.id].push(data)
 
-        socket.to(roomId).emit("OnRemoveCandidates", data);
-      });
+      data.userId = socket.userId
 
-      socket.on("onAnswer", (data) => {
+      socket.to(roomId).emit("OnIceCandidate", data)
+    })
 
-        console.log("onAnswer")
+    socket.on("OnRemoveCandidates", data => {
+      console.log("OnRemoveCandidates")
 
-        this.activeOffers[socket.userId] = data;
+      socket.to(roomId).emit("OnRemoveCandidates", data)
+    })
 
-        socket.to(roomId).emit("onAnswer", data);
-      });
+    socket.on("onAnswer", data => {
+      console.log("onAnswer")
 
-      socket.on("onOffer", (data) => {
+      //this.activeOffers[socket.userId] = data
 
-        console.log("onOffer")
+      data.userId = socket.userId
 
-        this.activeOffers[socket.userId] = data;
+      socket.to(roomId).emit("onAnswer", data)
+    })
 
-        socket.to(roomId).emit("onOffer", data);
-      });
+    socket.on("onOffer", data => {
+      console.log("onOffer")
 
-      socket.on("disconnect", () => {
-        delete this.activeSessions[socket.userId];
-        delete this.activeClients[socket.userId];
-        delete this.activeOffers[socket.userId];
-  
-        console.log("Active Clients -", Object.keys(this.activeClients).length);
-      });
+      this.activeOffers[socket.userId] = data
 
-      return
+      data.userId = socket.userId
 
-    socket.on("make-answer", (data) => {
+      socket.to(roomId).emit("onOffer", data)
+    })
+
+    socket.on("disconnect", () => {
+      delete this.activeSessions[socket.userId]
+      delete this.activeClients[socket.userId]
+      delete this.activeOffers[socket.userId]
+      delete this.activeIceCandidates[socket.userId]
+
+      socket.to(roomId).emit("onUserLeave", {
+        userId: socket.userId,
+        userName: socket.userName
+      })
+
+      console.log("Active Clients -", Object.keys(this.activeClients).length)
+    })
+
+    return
+
+    socket.on("make-answer", data => {
       socket.to(data.socketId).emit("answer-made", {
         socketId: socket.id,
-        answer: data.answer,
-      });
-    });
+        answer: data.answer
+      })
+    })
 
     socket.on("call-disconnect", () => {
       socket.to(roomId).emit("call-disconnect", {
-        socketId: socket.id,
-      });
-    });
+        socketId: socket.id
+      })
+    })
 
     socket.on("speaking", () => {
       socket.to(roomId).emit("speaking", {
-        socketId: socket.id,
-      });
-    });
+        socketId: socket.id
+      })
+    })
 
-    socket.on("zoom", (data) => {
+    socket.on("zoom", data => {
       socket.to(roomId).emit("zoom", {
         socketId: socket.id,
-        zoom: data.zoom,
-      });
-    });
+        zoom: data.zoom
+      })
+    })
 
     socket.on("disconnect", () => {
-      delete this.activeSessions[socket.userId];
-      delete this.activeClients[socket.userId];
+      delete this.activeSessions[socket.userId]
+      delete this.activeClients[socket.userId]
 
-      console.log("Active Clients -", Object.keys(this.activeClients).length);
-    });
+      console.log("Active Clients -", Object.keys(this.activeClients).length)
+    })
   }
 }
 
 module.exports = (io, sessionRepo) => {
-  return new WebSocketHandler(io, sessionRepo);
-};
+  return new WebSocketHandler(io, sessionRepo)
+}
