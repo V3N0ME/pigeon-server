@@ -60,6 +60,7 @@ class UserRoutes {
         const resp = await this.userUsecase.login(credentials);
         res.json(resp);
       } catch (err) {
+        console.log(err)
         if (err.name === "ValidationError") {
           res.json({ code: 422, msg: err.toString() });
         } else {
