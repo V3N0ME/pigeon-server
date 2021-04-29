@@ -39,6 +39,10 @@ class WebSocketHandler {
     const users = []
 
     for (const userId in this.activeClients) {
+      if (userId === socket.userId) {
+        continue
+      }
+
       users.push(userId)
     }
 
