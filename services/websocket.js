@@ -92,19 +92,23 @@ class WebSocketHandler {
 
       //this.activeOffers[socket.userId] = data
 
-      data.userId = socket.userId
+      const receiverId = data.userId
 
-      socket.to(roomId).emit("onAnswer", data)
+      const forwardingAnswer = { ...data }
+      forwardingAnswer.userId = socket.userId
+
+      socket.to(receiverId).emit("onAnswer", forwardingAnswer)
     })
 
     socket.on("onOffer", data => {
       console.log("onOffer")
 
-      this.activeOffers[socket.userId] = data
+      const receiverId = data.userId
 
-      data.userId = socket.userId
+      const forwardingOffer = { ...data }
+      forwardingOffer.userId = socket.userId
 
-      socket.to(roomId).emit("onOffer", data)
+      socket.to(receiverId).emit("onOffer", forwardingOffer)
     })
 
     socket.on("disconnect", () => {
